@@ -9,14 +9,25 @@ import { main } from './generate-report.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to kill processes on a specific port
+// Function to kill processes on a specific port (cross-platform)
 function killPort(port) {
   try {
-    const result = execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`);
-    if (result && result.length) {
-      console.log(`Killed process(es) on port ${port}`);
+    if (os.platform() === 'win32') {
+      const output = execSync(`netstat -ano | findstr :${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+      const pids = [...new Set(
+        output.split('\n')
+          .map(line => line.trim().split(/\s+/).pop())
+          .filter(pid => pid && /^\d+$/.test(pid) && pid !== '0')
+      )];
+      for (const pid of pids) {
+        try { execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore' }); } catch { /* already gone */ }
+      }
+      if (pids.length) console.log(`Killed process(es) on port ${port}`);
+    } else {
+      const result = execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`);
+      if (result && result.length) console.log(`Killed process(es) on port ${port}`);
     }
-  } catch (error) {
+  } catch {
     // No process found or other error - that's fine
   }
 }
@@ -125,7 +136,8 @@ async function startServer() {
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n📊 Test report server running at:`);
       console.log(`   Local:   http://localhost:${PORT}/`);
-      console.log(`   Network: http://${os.networkInterfaces().en0?.find(i => i.family === 'IPv4')?.address || 'localhost'}:${PORT}/`);
+      const localIp = Object.values(os.networkInterfaces()).flat().find(i => i?.family === 'IPv4' && !i.internal)?.address || 'localhost';
+      console.log(`   Network: http://${localIp}:${PORT}/`);
       console.log('\n🔄 The report will automatically update when files change');
       console.log('   Press Ctrl+C to stop the server\n');
       

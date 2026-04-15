@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(maestro --version)",
+      "Bash(adb --version)"
+    ]
+  }
+}
