@@ -23,7 +23,7 @@ function findYamlFiles(dir) {
   try {
     const files = fs.readdirSync(dir, { withFileTypes: true });
     let yamlFiles = [];
-    
+
     for (const file of files) {
       const fullPath = path.join(dir, file.name);
       if (file.isDirectory()) {
@@ -32,7 +32,7 @@ function findYamlFiles(dir) {
         yamlFiles.push(fullPath);
       }
     }
-    
+
     return yamlFiles;
   } catch (error) {
     console.error(`Error reading directory ${dir}:`, error.message);
@@ -44,7 +44,7 @@ function findYamlFiles(dir) {
 async function recordFlow(flowPath) {
   try {
     const flowName = path.basename(flowPath, path.extname(flowPath));
-    
+
     // Create recordings directory if it doesn't exist
     if (!fs.existsSync(RECORDINGS_DIR)) {
       fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
@@ -55,7 +55,7 @@ async function recordFlow(flowPath) {
     if (fs.existsSync(tempOutputFile)) {
       fs.unlinkSync(tempOutputFile);
     }
-    
+
     console.log(`\n🔵 Starting recording for: ${flowPath}`);
     const recordCmd = [
       MAESTRO_BIN,
@@ -64,11 +64,11 @@ async function recordFlow(flowPath) {
       `"${flowPath}"`,
       `"${tempOutputFile}"`,
       `--config "${CONFIG_PATH}"`,
-      '-e appId=org.wikipedia'
+      '-e appId=org.wikipedia',
     ].join(' ');
-    
+
     console.log(`   Command: ${recordCmd}`);
-    
+
     try {
       execSync(recordCmd, { stdio: 'inherit' });
       const finalOutputFile = path.join(RECORDINGS_DIR, `${flowName}-passed.mp4`);
@@ -110,12 +110,11 @@ async function recordFlow(flowPath) {
 // Main function
 async function main() {
   console.log('🚀 Starting Maestro flow recording...');
-  
+
   // If no specific flows are defined, search for all YAML files in .maestro/flows
   const defaultSearchDir = path.join(__dirname, '..', '.maestro/flows');
-  const flowsToRecord = flowPaths.length > 0 
-    ? flowPaths.map(p => path.resolve(p))
-    : findYamlFiles(defaultSearchDir);
+  const flowsToRecord =
+    flowPaths.length > 0 ? flowPaths.map(p => path.resolve(p)) : findYamlFiles(defaultSearchDir);
 
   if (flowsToRecord.length === 0) {
     console.log('ℹ️  No flow files found to record.');
@@ -132,7 +131,7 @@ async function main() {
   let recordedCount = 0;
   let testPassedCount = 0;
   let testFailedCount = 0;
-  
+
   for (const flow of flowsToRecord) {
     const result = await recordFlow(flow);
     if (!result) {
@@ -148,7 +147,7 @@ async function main() {
     if (result.success) {
       recordedCount++;
     }
-    
+
     // Small delay between recordings
     await new Promise(resolve => setTimeout(resolve, 3000));
   }
@@ -160,14 +159,14 @@ async function main() {
 
   const hasTestFailures = testFailedCount > 0;
   const hasRecordingFailures = recordedCount < flowsToRecord.length;
-  
+
   // Return the results for potential use by other scripts
   const summary = {
     total: flowsToRecord.length,
     recorded: recordedCount,
     passed: testPassedCount,
     failed: testFailedCount,
-    recordingsDir: RECORDINGS_DIR
+    recordingsDir: RECORDINGS_DIR,
   };
 
   if (hasTestFailures || hasRecordingFailures) {

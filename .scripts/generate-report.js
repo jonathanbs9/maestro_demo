@@ -18,7 +18,8 @@ const REPORT_FILE = path.join(REPORT_DIR, 'test-report.html');
 // Get all video files from recordings directory with their status
 function getRecordings() {
   try {
-    return fs.readdirSync(RECORDINGS_DIR)
+    return fs
+      .readdirSync(RECORDINGS_DIR)
       .filter(file => file.endsWith('.mp4'))
       .map(file => {
         // Extract the base name and status from the filename
@@ -26,7 +27,7 @@ function getRecordings() {
         const baseName = path.basename(file, '.mp4');
         let name = baseName;
         let passed = true;
-        
+
         // Check if filename ends with -passed or -failed
         if (baseName.endsWith('-passed')) {
           name = baseName.slice(0, -7); // Remove -passed
@@ -35,12 +36,12 @@ function getRecordings() {
           name = baseName.slice(0, -7); // Remove -failed
           passed = false;
         }
-        
+
         return {
           name: name,
           originalName: baseName,
           path: path.relative(REPORT_DIR, path.join(RECORDINGS_DIR, file)),
-          passed: passed
+          passed: passed,
         };
       });
   } catch (error) {
@@ -52,7 +53,7 @@ function getRecordings() {
 // Generate HTML report
 function generateHTMLReport(recordings) {
   const timestamp = new Date().toISOString();
-  
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -203,9 +204,12 @@ function generateHTMLReport(recordings) {
     </header>
     
     <div class="test-grid" id="test-container">
-      ${recordings.length === 0 ? 
-        '<div class="empty-state">No test recordings found.</div>' : 
-        recordings.map(test => `
+      ${
+        recordings.length === 0
+          ? '<div class="empty-state">No test recordings found.</div>'
+          : recordings
+              .map(
+                test => `
           <div class="test-card" data-status="${test.passed ? 'passed' : 'failed'}">
             <div class="test-status ${test.passed ? 'status-pass' : 'status-fail'}">
               ${test.passed ? '✅ Passed' : '❌ Failed'}
@@ -216,7 +220,9 @@ function generateHTMLReport(recordings) {
             </video>
             <div class="test-name">${test.name}</div>
           </div>
-        `).join('')
+        `
+              )
+              .join('')
       }
     </div>
   </div>
@@ -247,15 +253,15 @@ function generateHTMLReport(recordings) {
 
 // Main function
 async function main() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     console.log('📊 Generating test report...');
-    
+
     const recordings = getRecordings();
     console.log(`Found ${recordings.length} test recordings`);
-    
+
     const html = generateHTMLReport(recordings);
     fs.writeFileSync(REPORT_FILE, html);
-    
+
     console.log(`✅ Report generated: ${REPORT_FILE}`);
     resolve(REPORT_FILE);
   });

@@ -6,6 +6,10 @@
   "description": "Maestro mobile testing demo",
   "scripts": {
     "check:prerequisites": "node .scripts/check-prerequisites.js",
+    "lint": "eslint \".scripts/**/*.js\" \".maestro/src/**/*.js\"",
+    "lint:fix": "eslint \".scripts/**/*.js\" \".maestro/src/**/*.js\" --fix",
+    "format": "prettier --write \".scripts/**/*.js\" \".maestro/src/**/*.js\"",
+    "format:check": "prettier --check \".scripts/**/*.js\" \".maestro/src/**/*.js\"",
     "env:cleanup": "npm run env:teardown && npm run kill:ports && npm run kill:processes && npm run kill:emulators && npm run artifacts:delete",
     "env:setup": "npm run maestro:device:start:android && npm run android:install:wikipedia",
     "env:teardown": "npm run android:uninstall:wikipedia && npm run maestro:device:stop",
@@ -39,9 +43,14 @@
   },
   "devDependencies": {
     "@devicecloud.dev/dcd": "^4.1.4",
+    "@eslint/js": "^9.39.4",
     "archiver": "^7.0.1",
     "dotenv": "^17.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^17.24.0",
     "nodemailer": "^7.0.11",
-    "open": "^11.0.0"
+    "open": "^11.0.0",
+    "prettier": "^3.8.3"
   }
 }

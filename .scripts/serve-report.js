@@ -13,14 +13,24 @@ const __dirname = path.dirname(__filename);
 function killPort(port) {
   try {
     if (os.platform() === 'win32') {
-      const output = execSync(`netstat -ano | findstr :${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
-      const pids = [...new Set(
-        output.split('\n')
-          .map(line => line.trim().split(/\s+/).pop())
-          .filter(pid => pid && /^\d+$/.test(pid) && pid !== '0')
-      )];
+      const output = execSync(`netstat -ano | findstr :${port}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      });
+      const pids = [
+        ...new Set(
+          output
+            .split('\n')
+            .map(line => line.trim().split(/\s+/).pop())
+            .filter(pid => pid && /^\d+$/.test(pid) && pid !== '0')
+        ),
+      ];
       for (const pid of pids) {
-        try { execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore' }); } catch { /* already gone */ }
+        try {
+          execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore' });
+        } catch {
+          /* already gone */
+        }
       }
       if (pids.length) console.log(`Killed process(es) on port ${port}`);
     } else {
@@ -58,15 +68,16 @@ const MIME_TYPES = {
 
 const server = http.createServer(async (req, res) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  
+
   // Handle root path by serving the test report
-  let filePath = req.url === '/' 
-    ? path.join(BASE_DIR, 'test-results', 'test-report.html')
-    : path.join(BASE_DIR, decodeURIComponent(req.url));
-  
+  let filePath =
+    req.url === '/'
+      ? path.join(BASE_DIR, 'test-results', 'test-report.html')
+      : path.join(BASE_DIR, decodeURIComponent(req.url));
+
   // Prevent directory traversal
   filePath = path.normalize(filePath).replace(/(\/|\\)\.\.(\/|\\|$)/, '');
-  
+
   try {
     // Check if file exists
     let stats;
@@ -76,17 +87,17 @@ const server = http.createServer(async (req, res) => {
         filePath = path.join(filePath, 'index.html');
         stats = await fs.stat(filePath);
       }
-    } catch (err) {
+    } catch (_err) {
       // If file doesn't exist, try to find it case-insensitively
       const dir = path.dirname(filePath);
       const fileName = path.basename(filePath);
-      
+
       try {
         const files = await fs.readdir(dir);
         // Normalize both filenames for comparison (case-insensitive and trim whitespace)
         const normalizedTarget = fileName.toLowerCase().trim();
         const foundFile = files.find(f => f.toLowerCase().trim() === normalizedTarget);
-        
+
         if (foundFile) {
           filePath = path.join(dir, foundFile);
           stats = await fs.stat(filePath);
@@ -94,27 +105,26 @@ const server = http.createServer(async (req, res) => {
           console.error(`File not found: ${filePath}`);
           throw new Error('File not found');
         }
-      } catch (err) {
+      } catch (_err) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('404 Not Found');
         return;
       }
     }
-    
+
     // Set content type based on file extension
     const extname = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[extname] || 'application/octet-stream';
-    
+
     // Read and serve the file
     const data = await fs.readFile(filePath);
-    res.writeHead(200, { 
+    res.writeHead(200, {
       'Content-Type': contentType,
       'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      Pragma: 'no-cache',
+      Expires: '0',
     });
     res.end(data, 'utf-8');
-    
   } catch (err) {
     console.error(`Error serving ${filePath}:`, err);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -130,24 +140,29 @@ async function startServer() {
   try {
     // Generate the report first
     console.log('📊 Generating test report...');
-    const reportPath = await main();
-    
+    await main();
+
     // Start the server
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n📊 Test report server running at:`);
       console.log(`   Local:   http://localhost:${PORT}/`);
-      const localIp = Object.values(os.networkInterfaces()).flat().find(i => i?.family === 'IPv4' && !i.internal)?.address || 'localhost';
+      const localIp =
+        Object.values(os.networkInterfaces())
+          .flat()
+          .find(i => i?.family === 'IPv4' && !i.internal)?.address || 'localhost';
       console.log(`   Network: http://${localIp}:${PORT}/`);
       console.log('\n🔄 The report will automatically update when files change');
       console.log('   Press Ctrl+C to stop the server\n');
-      
+
       // Try to open the browser automatically
       (async () => {
         try {
           const open = (await import('open')).default;
           await open(`http://localhost:${PORT}/`);
-        } catch (err) {
-          console.log('Could not open browser automatically. Please open the URL above in your browser.');
+        } catch (_err) {
+          console.log(
+            'Could not open browser automatically. Please open the URL above in your browser.'
+          );
         }
       })();
     });
