@@ -19,7 +19,15 @@ The following tools must be installed and available in your `PATH` before using 
 |---|---|---|
 | [Node.js](https://nodejs.org/) | Run automation scripts | 20.x |
 | [Android Studio](https://developer.android.com/studio) | Android emulator & ADB | Latest |
-| [Maestro CLI](https://maestro.mobile.dev/getting-started/installing-maestro) | Mobile test runner | 1.40+ |
+| [Maestro CLI](https://maestro.mobile.dev/getting-started/installing-maestro) | Mobile test runner | 2.3.0 (tested) |
+
+> **Maestro CLI version:** This project was last tested with `2.3.0`. Newer versions should work but are not guaranteed — if you encounter unexpected behavior, install the tested version explicitly:
+> ```bash
+> # MacOS / Linux
+> curl -fsSL "https://get.maestro.mobile.dev" | bash -s -- --version 2.3.0
+> # Windows
+> iex "& { $(iwr 'https://get.maestro.mobile.dev') } --version 2.3.0"
+> ```
 
 Make sure `adb` and `maestro` are accessible from your terminal:
 ```bash
