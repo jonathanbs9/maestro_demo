@@ -175,6 +175,19 @@ npm run kill:processes
 npm run kill:emulators
 ```
 
+## Example Flows
+
+The `.maestro/flows/wikipedia/examples/` directory contains flows that are **excluded from the default test suite** and exist purely for demonstration purposes.
+
+| File | Purpose |
+|---|---|
+| `FailingFlow.spec.yaml` | Shows what a failing Maestro test looks like in the terminal and HTML report |
+
+To run an example flow manually:
+```bash
+maestro test .maestro/flows/wikipedia/examples/FailingFlow.spec.yaml -e appId=org.wikipedia
+```
+
 ## Troubleshooting
 ### "App not installed" error
 If you have Maestro Studio open and are trying to run the tests, you might get an "App not installed" error. 
