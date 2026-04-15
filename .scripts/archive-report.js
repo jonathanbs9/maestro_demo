@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { spawnSync } from 'child_process';
+import { createWriteStream } from 'fs';
+import archiver from 'archiver';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,31 +36,38 @@ function formatTimestamp(date) {
 }
 
 function createArchive() {
-  resetOutputDir(OUTPUT_DIR);
-  ensureDir(RECORDINGS_DIR);
-  ensureDir(TEST_RESULTS_DIR);
+  return new Promise((resolve, reject) => {
+    resetOutputDir(OUTPUT_DIR);
+    ensureDir(RECORDINGS_DIR);
+    ensureDir(TEST_RESULTS_DIR);
 
-  const timestamp = formatTimestamp(new Date());
-  const archiveName = `test-report-${timestamp}.zip`;
-  const archivePath = path.join(OUTPUT_DIR, archiveName);
+    const timestamp = formatTimestamp(new Date());
+    const archiveName = `test-report-${timestamp}.zip`;
+    const archivePath = path.join(OUTPUT_DIR, archiveName);
 
-  console.log('🗜️  Creating test report archive...');
-  console.log(`   📁 Recordings: ${RECORDINGS_DIR}`);
-  console.log(`   📁 Test results: ${TEST_RESULTS_DIR}`);
-  console.log(`   🎯 Output: ${archivePath}`);
+    console.log('🗜️  Creating test report archive...');
+    console.log(`   📁 Recordings: ${RECORDINGS_DIR}`);
+    console.log(`   📁 Test results: ${TEST_RESULTS_DIR}`);
+    console.log(`   🎯 Output: ${archivePath}`);
 
-  const args = ['-r', archivePath, path.basename(RECORDINGS_DIR), path.basename(TEST_RESULTS_DIR)];
-  const result = spawnSync('zip', args, { cwd: ROOT_DIR, stdio: 'inherit' });
-  if (result.status !== 0) {
-    throw new Error('zip command failed');
-  }
+    const output = createWriteStream(archivePath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
 
-  console.log(`✅ Archive created: ${archivePath}`);
-  return archivePath;
+    output.on('close', () => {
+      console.log(`✅ Archive created: ${archivePath} (${archive.pointer()} bytes)`);
+      resolve(archivePath);
+    });
+
+    archive.on('error', reject);
+    archive.pipe(output);
+    archive.directory(RECORDINGS_DIR, path.basename(RECORDINGS_DIR));
+    archive.directory(TEST_RESULTS_DIR, path.basename(TEST_RESULTS_DIR));
+    archive.finalize();
+  });
 }
 
 try {
-  createArchive();
+  await createArchive();
 } catch (error) {
   console.error('❌ Failed to archive report:', error.message);
   process.exit(1);
