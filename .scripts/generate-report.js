@@ -15,35 +15,56 @@ const REPORT_FILE = path.join(REPORT_DIR, 'test-report.html');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
+const MIN_VALID_MP4_BYTES = 1024; // Files under 1 KB are considered corrupt/incomplete
+
 // Get all video files from recordings directory with their status
 function getRecordings() {
   try {
-    return fs
-      .readdirSync(RECORDINGS_DIR)
-      .filter(file => file.endsWith('.mp4'))
-      .map(file => {
-        // Extract the base name and status from the filename
-        // Format: {flowName}-{status}.mp4
-        const baseName = path.basename(file, '.mp4');
-        let name = baseName;
-        let passed = true;
+    const files = fs.readdirSync(RECORDINGS_DIR).filter(file => file.endsWith('.mp4'));
+    const valid = [];
+    const skipped = [];
 
-        // Check if filename ends with -passed or -failed
-        if (baseName.endsWith('-passed')) {
-          name = baseName.slice(0, -7); // Remove -passed
-          passed = true;
-        } else if (baseName.endsWith('-failed')) {
-          name = baseName.slice(0, -7); // Remove -failed
-          passed = false;
-        }
+    for (const file of files) {
+      const filePath = path.join(RECORDINGS_DIR, file);
+      const { size } = fs.statSync(filePath);
 
-        return {
-          name: name,
-          originalName: baseName,
-          path: path.relative(REPORT_DIR, path.join(RECORDINGS_DIR, file)),
-          passed: passed,
-        };
+      if (size < MIN_VALID_MP4_BYTES) {
+        skipped.push({ file, size });
+        continue;
+      }
+
+      // Extract the base name and status from the filename
+      // Format: {flowName}-{status}.mp4
+      const baseName = path.basename(file, '.mp4');
+      let name = baseName;
+      let passed = true;
+
+      // Check if filename ends with -passed or -failed
+      if (baseName.endsWith('-passed')) {
+        name = baseName.slice(0, -7); // Remove -passed
+        passed = true;
+      } else if (baseName.endsWith('-failed')) {
+        name = baseName.slice(0, -7); // Remove -failed
+        passed = false;
+      }
+
+      valid.push({
+        name,
+        originalName: baseName,
+        path: path.relative(REPORT_DIR, filePath),
+        passed,
+        size,
       });
+    }
+
+    if (skipped.length > 0) {
+      console.warn(`⚠️  Skipped ${skipped.length} incomplete/corrupt recording(s):`);
+      skipped.forEach(({ file, size }) =>
+        console.warn(`   - ${file} (${size} bytes — below ${MIN_VALID_MP4_BYTES}B threshold)`)
+      );
+    }
+
+    return valid;
   } catch (error) {
     console.error('Error reading recordings directory:', error.message);
     return [];
