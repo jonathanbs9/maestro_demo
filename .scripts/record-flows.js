@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const MAESTRO_BIN = path.join(os.homedir(), '.maestro/bin/maestro');
 const CONFIG_PATH = path.join(__dirname, '..', '.maestro/config.yaml');
 const RECORDINGS_DIR = path.join(__dirname, '..', 'recordings');
+const FLOWS_DIR = path.join(__dirname, '..', '.maestro/flows');
 
 // Define your flow paths here
 const flowPaths = [
@@ -41,9 +42,21 @@ function findYamlFiles(dir) {
 }
 
 // Function to run maestro record and capture test status
+/**
+ * Builds a unique recording name from the flow path relative to the flows root.
+ * Example: .maestro/flows/wikipedia/main/LoginScreen.spec.yaml
+ *       -> wikipedia-main-LoginScreen
+ * This prevents collisions when two flows share the same filename in different dirs.
+ */
+function buildFlowKey(flowPath) {
+  const relative = path.relative(FLOWS_DIR, flowPath);
+  const withoutExt = relative.replace(/\.spec\.(yaml|yml)$/, '').replace(/\.(yaml|yml)$/, '');
+  return withoutExt.replace(/[\\/]/g, '-');
+}
+
 async function recordFlow(flowPath) {
   try {
-    const flowName = path.basename(flowPath, path.extname(flowPath));
+    const flowName = buildFlowKey(flowPath);
 
     // Create recordings directory if it doesn't exist
     if (!fs.existsSync(RECORDINGS_DIR)) {
