@@ -5,6 +5,7 @@ flows:
 excludeTags:
   - util
   - recordTemplate
+  - demoFailure
 
 timeout: 10000
 

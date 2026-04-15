@@ -1,0 +1,33 @@
+# EXAMPLE: Intentional Failure Flow
+#
+# Purpose: Demonstrates what a failing Maestro test looks like —
+#          both in the terminal output and in the HTML report.
+#
+# Why it fails: The assertVisible command references "invalid_id",
+#               which does not exist in the app UI, so it will
+#               always produce: "Assertion is false: id: invalid_id is visible"
+#
+# How to run it manually:
+#   maestro test .maestro/flows/wikipedia/examples/FailingFlow.spec.yaml -e appId=org.wikipedia
+#
+# Note: This flow is intentionally excluded from the default test suite
+#       (it is not referenced in .maestro/config.yaml).
+
+appId: ${appId}
+tags:
+  - example
+  - demoFailure
+---
+- launchApp:
+    clearState: true
+
+- runScript:
+    file: "../../../src/pages/LaunchStepper.page.js"
+
+- runFlow:
+    when:
+      visible:
+        id: ${output.launchStepper.skipBtn}
+    commands:
+        - assertVisible:
+            id: "invalid_id"
