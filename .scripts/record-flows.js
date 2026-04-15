@@ -19,6 +19,9 @@ const flowPaths = [
   // '.maestro/flows/wikipedia/conditional/LaunchStepper.spec.yaml'
 ];
 
+// Directories excluded from auto-discovery — flows inside these won't be recorded.
+const EXCLUDED_DIRS = ['examples'];
+
 // Function to find all YAML files in a directory
 function findYamlFiles(dir) {
   try {
@@ -28,6 +31,10 @@ function findYamlFiles(dir) {
     for (const file of files) {
       const fullPath = path.join(dir, file.name);
       if (file.isDirectory()) {
+        if (EXCLUDED_DIRS.includes(file.name)) {
+          console.log(`⏭️  Skipping excluded directory: ${fullPath}`);
+          continue;
+        }
         yamlFiles = [...yamlFiles, ...findYamlFiles(fullPath)];
       } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
         yamlFiles.push(fullPath);
