@@ -1,11 +1,31 @@
 # Table of Contents
 
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
+  - [MacOS](#installation-macos)
+  - [Windows 11](#installation-windows-11)
+- [Environment Setup](#environment-setup)
 - [Run on Android](#run-on-android)
   - [Quick Usage](#quick-usage)
   - [Detailed Usage](#detailed-usage)
   - [Reports](#reports)
   - [Troubleshooting](#troubleshooting)
+
+# Prerequisites
+
+The following tools must be installed and available in your `PATH` before using this project:
+
+| Tool | Purpose | Min Version |
+|---|---|---|
+| [Node.js](https://nodejs.org/) | Run automation scripts | 20.x |
+| [Android Studio](https://developer.android.com/studio) | Android emulator & ADB | Latest |
+| [Maestro CLI](https://maestro.mobile.dev/getting-started/installing-maestro) | Mobile test runner | 1.40+ |
+
+Make sure `adb` and `maestro` are accessible from your terminal:
+```bash
+adb --version
+maestro --version
+```
 
 # Installation (MacOS)
 
@@ -19,6 +39,55 @@ chmod +x .scripts/
 brew tap mobile-dev-inc/tap
 brew install maestro
 ```
+4. Install dependencies
+```bash
+npm install
+```
+5. Copy the environment file and fill in your values
+```bash
+cp .env.example .env
+```
+
+# Installation (Windows 11)
+
+1. Clone the repository
+2. Install [Node.js 20+](https://nodejs.org/) and [Android Studio](https://developer.android.com/studio)
+3. Install Maestro CLI — open a terminal and run:
+```powershell
+iex "& { $(iwr 'https://get.maestro.mobile.dev') }"
+```
+> After installation, **restart the terminal** so `maestro` is available in the PATH.
+
+4. Verify both tools are available:
+```bash
+adb --version
+maestro --version
+```
+5. Install dependencies
+```bash
+npm install
+```
+6. Copy the environment file and fill in your values
+```bash
+copy .env.example .env
+```
+
+> **Android Emulator on Windows:** Open Android Studio → Device Manager → create an AVD with API 34, x86_64. Start the emulator before running tests. The `npm run env:setup` command does **not** auto-start the emulator on Windows — start it manually from Android Studio.
+
+# Environment Setup
+
+Sensitive values (email credentials, API keys, Slack tokens) are loaded from a `.env` file.
+Copy the example and fill in the values you need:
+
+```bash
+# MacOS / Linux
+cp .env.example .env
+
+# Windows
+copy .env.example .env
+```
+
+See [`.env.example`](.env.example) for a description of each variable. Variables are only required for the features you intend to use — email reporting, Maestro Cloud, Device Cloud, or Slack notifications.
 
 # Run on Android
 
@@ -111,4 +180,4 @@ npm run kill:emulators
 If you have Maestro Studio open and are trying to run the tests, you might get an "App not installed" error. 
 This is because Maestro Studio is using the same emulator as the tests. 
 To fix this, you need to close Maestro Studio and run the tests again.
-- (Original workaround message on GitHub)[https://github.com/mobile-dev-inc/Maestro/issues/1104#issuecomment-1872975969]
+- [Original workaround message on GitHub](https://github.com/mobile-dev-inc/Maestro/issues/1104#issuecomment-1872975969)
