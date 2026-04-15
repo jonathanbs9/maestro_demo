@@ -1,3 +1,3 @@
 output.mainScreen = {
-    headerImg: "org.wikipedia:id/view_announcement_header_image",
+  headerImg: 'org.wikipedia:id/view_announcement_header_image',
 };

@@ -1,18 +1,21 @@
 import { execSync } from 'child_process';
 
-const RESET  = '\x1b[0m';
-const GREEN  = '\x1b[32m';
-const RED    = '\x1b[31m';
+const RESET = '\x1b[0m';
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
-const BOLD   = '\x1b[1m';
+const BOLD = '\x1b[1m';
 
-const ok   = (msg) => console.log(`  ${GREEN}✔${RESET}  ${msg}`);
-const fail = (msg) => console.log(`  ${RED}✘${RESET}  ${msg}`);
-const warn = (msg) => console.log(`  ${YELLOW}!${RESET}  ${msg}`);
+const ok = msg => console.log(`  ${GREEN}✔${RESET}  ${msg}`);
+const fail = msg => console.log(`  ${RED}✘${RESET}  ${msg}`);
+const warn = msg => console.log(`  ${YELLOW}!${RESET}  ${msg}`);
 
 function run(cmd) {
   try {
-    return { stdout: execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(), ok: true };
+    return {
+      stdout: execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(),
+      ok: true,
+    };
   } catch (e) {
     return { stdout: '', stderr: e.message, ok: false };
   }
@@ -79,7 +82,9 @@ if (devices.ok) {
 }
 
 // ── npm dependencies ──────────────────────────────────────────────────────────
-const nm = run('node -e "import(\'fs\').then(fs => process.exit(fs.default.existsSync(\'node_modules\') ? 0 : 1))"');
+const nm = run(
+  "node -e \"import('fs').then(fs => process.exit(fs.default.existsSync('node_modules') ? 0 : 1))\""
+);
 if (nm.ok) {
   ok('node_modules present');
   passed++;
@@ -89,16 +94,22 @@ if (nm.ok) {
 }
 
 // ── .env file ─────────────────────────────────────────────────────────────────
-const env = run('node -e "import(\'fs\').then(fs => process.exit(fs.default.existsSync(\'.env\') ? 0 : 1))"');
+const env = run(
+  "node -e \"import('fs').then(fs => process.exit(fs.default.existsSync('.env') ? 0 : 1))\""
+);
 if (env.ok) {
   ok('.env file present');
   passed++;
 } else {
-  warn('.env file not found — email reporting and cloud features will not work (copy .env.example to .env)');
+  warn(
+    '.env file not found — email reporting and cloud features will not work (copy .env.example to .env)'
+  );
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
-console.log(`\n${BOLD}Result:${RESET} ${GREEN}${passed} passed${RESET}${failed > 0 ? `, ${RED}${failed} failed${RESET}` : ''}\n`);
+console.log(
+  `\n${BOLD}Result:${RESET} ${GREEN}${passed} passed${RESET}${failed > 0 ? `, ${RED}${failed} failed${RESET}` : ''}\n`
+);
 
 if (failed > 0) {
   console.log(`${RED}Fix the issues above before running tests.${RESET}\n`);

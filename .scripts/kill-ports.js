@@ -7,12 +7,18 @@ const isWindows = os.platform() === 'win32';
 for (const port of PORTS) {
   try {
     if (isWindows) {
-      const output = execSync(`netstat -ano | findstr :${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
-      const pids = [...new Set(
-        output.split('\n')
-          .map(line => line.trim().split(/\s+/).pop())
-          .filter(pid => pid && /^\d+$/.test(pid) && pid !== '0')
-      )];
+      const output = execSync(`netstat -ano | findstr :${port}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      });
+      const pids = [
+        ...new Set(
+          output
+            .split('\n')
+            .map(line => line.trim().split(/\s+/).pop())
+            .filter(pid => pid && /^\d+$/.test(pid) && pid !== '0')
+        ),
+      ];
       if (pids.length > 0) {
         for (const pid of pids) {
           try {
@@ -26,7 +32,10 @@ for (const port of PORTS) {
         console.log(`No process found using port ${port}`);
       }
     } else {
-      const pids = execSync(`lsof -t -i:${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+      const pids = execSync(`lsof -t -i:${port}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      }).trim();
       if (pids) {
         execSync(`kill -9 ${pids}`);
         console.log(`Killed processes on port ${port}: ${pids}`);
