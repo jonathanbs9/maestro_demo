@@ -91,6 +91,24 @@ See [`.env.example`](.env.example) for a description of each variable. Variables
 
 # Run on Android
 
+## Check Prerequisites
+
+Before running tests for the first time, verify your environment is ready:
+
+```bash
+npm run check:prerequisites
+```
+
+This will validate:
+- Node.js 20+
+- Maestro CLI in PATH
+- ADB in PATH
+- Android emulator running
+- `node_modules` installed
+- `.env` file present
+
+
+
 ## Quick Usage
 1. Perform env cleanup
 ```bash
